@@ -1,0 +1,25 @@
+-- Session-level fact table: the base for every channel, funnel and cohort metric.
+select
+    session_key,
+    user_pseudo_id,
+    session_start_ts,
+    session_date,
+    session_number,
+    session_number = 1                              as is_new_user_session,
+    source,
+    medium,
+    campaign,
+    {{ channel_group('source', 'medium') }}         as channel_group,
+    device_category,
+    country,
+    is_engaged,
+    pageviews,
+    engagement_time_sec,
+    reached_view_item,
+    reached_add_to_cart,
+    reached_begin_checkout,
+    reached_add_payment_info,
+    reached_purchase,
+    transactions,
+    revenue_usd
+from {{ ref('int_ga4__sessions') }}

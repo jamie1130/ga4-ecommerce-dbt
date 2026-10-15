@@ -1,0 +1,13 @@
+# Copy to ~/.dbt/profiles.yml and replace YOUR_GCP_PROJECT_ID.
+# Run `gcloud auth application-default login` first.
+ga4_ecommerce:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: YOUR_GCP_PROJECT_ID   # your own project; queries are billed here (sandbox free tier is enough)
+      dataset: ga4_dbt               # dbt will create ga4_dbt_staging, ga4_dbt_marts, etc.
+      location: US                   # must match the public dataset's location
+      threads: 4
+      priority: interactive

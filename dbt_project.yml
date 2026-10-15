@@ -1,0 +1,28 @@
+name: ga4_ecommerce
+version: "1.0.0"
+config-version: 2
+profile: ga4_ecommerce
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+seed-paths: ["seeds"]
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # GA4 sample covers 2020-11-01 to 2021-01-31. Narrow this range while developing to save scan cost.
+  start_date: "20201101"
+  end_date: "20210131"
+
+models:
+  ga4_ecommerce:
+    staging:
+      +materialized: table   # scan the raw sharded tables once, then build on top
+      +schema: staging
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts

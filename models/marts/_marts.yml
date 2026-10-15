@@ -1,0 +1,69 @@
+version: 2
+
+models:
+  - name: fct_sessions
+    description: >
+      One row per GA4 session. Channel group is derived from the first source/medium seen in
+      the session (see the channel_group macro). Revenue counts purchase events only.
+    columns:
+      - name: session_key
+        description: user_pseudo_id + ga_session_id.
+        data_tests: [unique, not_null]
+      - name: channel_group
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Direct', 'Organic Search', 'Paid Search', 'Display', 'Social', 'Email',
+                       'Affiliates', 'Referral', 'Obfuscated', 'Unassigned', 'Other']
+      - name: revenue_usd
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: ">= 0"
+      - name: is_engaged
+        description: GA4 engaged session (10s+, a conversion, or 2+ pageviews).
+
+  - name: fct_daily_channel_performance
+    description: Daily sessions, users, engagement, conversion and revenue by channel group and device.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [session_date, channel_group, device_category]
+    columns:
+      - name: session_conversion_rate
+        description: Sessions with at least one purchase / all sessions.
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "between 0 and 1"
+      - name: average_order_value_usd
+        description: Revenue / transactions. Null when there are no transactions.
+
+  - name: fct_funnel_by_channel
+    description: >
+      Funnel step counts and step-to-step conversion by channel and device. Steps are "reached in
+      the session", not strictly ordered, because GA4 does not guarantee every step fires.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [channel_group, device_category]
+
+  - name: fct_item_performance
+    description: Views, add-to-carts, units, orders and revenue per item.
+    columns:
+      - name: item_id
+        data_tests: [unique, not_null]
+
+  - name: fct_user_retention_weekly
+    description: Share of each weekly acquisition cohort that is active n weeks later.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns: [cohort_week, weeks_since_first]
+    columns:
+      - name: retention_rate
+        data_tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "between 0 and 1"
